@@ -35,6 +35,11 @@ import io.garrit.android.demo.tododemo.ui.theme.TodoDemoTheme
 import androidx.compose.ui.graphics.Color
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.platform.LocalContext
 import java.util.UUID
 
 data class Task(
@@ -50,7 +55,6 @@ class MainActivity : ComponentActivity() {
             val list = remember { mutableStateListOf<Task>() }
 
             TodoDemoTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = ColorBlack
@@ -64,13 +68,17 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen(list: MutableList<Task>, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
     Column(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
-                .padding(bottom = 80.dp)
+//                .padding(bottom = 80.dp)
         ) {
             items(list) { task ->
                 RowView(task)
@@ -78,6 +86,16 @@ fun MainScreen(list: MutableList<Task>, modifier: Modifier = Modifier) {
         }
 
         TextInputView(list = list)
+
+        Button(
+            onClick = {
+                val intent = Intent(context, TaskActivity::class.java)
+                context.startActivity(intent)
+            },
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("Go to New Activity")
+        }
     }
 }
 
@@ -122,7 +140,7 @@ fun TextInputView(list: MutableList<Task> ) {
             ),
             modifier = Modifier.constrainAs(button) {
                 bottom.linkTo(textField.bottom)
-                end.linkTo(textField.end, margin = 8.dp)
+                start.linkTo(textField.end, margin = 8.dp)
             }
         ){
             Text("+")
@@ -131,14 +149,6 @@ fun TextInputView(list: MutableList<Task> ) {
     }
 }
 
-@Composable
-fun ListView(list: List<Task>) {
-    LazyColumn {
-        items(list) { task ->
-            RowView(task)
-        }
-    }
-}
 
 @Composable
 fun RowView(task: Task) {

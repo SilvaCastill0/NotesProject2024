@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
 
 class EditTaskActivity : ComponentActivity() {
     private lateinit var task: Task
@@ -35,9 +36,8 @@ class EditTaskActivity : ComponentActivity() {
 
         Column(
             modifier = Modifier
+                .padding(16.dp)
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
         ) {
             OutlinedTextField(
                 value = newTitle,
@@ -49,8 +49,14 @@ class EditTaskActivity : ComponentActivity() {
                 value = newDescription,
                 onValueChange = { newDescription = it },
                 label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+                    .weight(1f)
             )
+
+            Spacer(modifier = Modifier.weight(0.1f))
+
             Button(
                 onClick = {
                     val intent = Intent().apply {
@@ -60,7 +66,9 @@ class EditTaskActivity : ComponentActivity() {
                     setResult(RESULT_OK, intent)
                     finish()
                     },
-                modifier = Modifier.padding(top = 16.dp)
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 16.dp)
             ){
                 Text("Save")
             }

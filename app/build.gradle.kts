@@ -51,6 +51,8 @@ android {
 
 dependencies {
 
+
+    implementation("androidx.activity:activity-ktx:1.8.0")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")

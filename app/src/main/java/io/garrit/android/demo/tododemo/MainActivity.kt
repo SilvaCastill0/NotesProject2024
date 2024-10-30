@@ -30,16 +30,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import io.garrit.android.demo.tododemo.ui.theme.ColorBlack
+import io.garrit.android.demo.tododemo.ui.theme.ColorDarkBlue
 import io.garrit.android.demo.tododemo.ui.theme.TodoDemoTheme
 import androidx.compose.ui.graphics.Color
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.compose.ui.unit.dp
 import android.content.Intent
 import android.widget.Button
+import androidx.activity.result.ActivityResult
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import java.util.UUID
 
 data class Task(
@@ -48,7 +52,9 @@ data class Task(
     var isChecked: MutableState<Boolean> = mutableStateOf(false),
 )
 
+
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -57,7 +63,7 @@ class MainActivity : ComponentActivity() {
             TodoDemoTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = ColorBlack
+                    color = ColorDarkBlue
                 ) {
                     MainScreen(list = list)
                 }
@@ -78,7 +84,7 @@ fun MainScreen(list: MutableList<Task>, modifier: Modifier = Modifier) {
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
-//                .padding(bottom = 80.dp)
+                .padding(bottom = 80.dp)
         ) {
             items(list) { task ->
                 RowView(task)
@@ -182,7 +188,7 @@ fun MainActivityPreview() {
     TodoDemoTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = ColorBlack
+            color = ColorDarkBlue
         ) {
             MainScreen(list = list)
         }

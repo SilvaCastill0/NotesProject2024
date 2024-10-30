@@ -2,7 +2,7 @@ package io.garrit.android.demo.tododemo.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val ColorBlack = Color(0xFF15202B)
+val ColorDarkBlue = Color(0xFF15202B)
 
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)

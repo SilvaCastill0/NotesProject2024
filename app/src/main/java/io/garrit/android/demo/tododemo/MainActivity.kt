@@ -47,6 +47,9 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import java.util.UUID
 
 data class Task(
@@ -56,12 +59,21 @@ data class Task(
 
 
 class MainActivity : ComponentActivity() {
+    internal var editingTask: Task? = null
     private val taskList = mutableStateListOf<Task>()
     private val taskLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
             val title = result.data?.getStringExtra("task_title") ?: ""
             val description = result.data?.getStringExtra("task_description") ?: ""
-            taskList.add(Task(title, description))
+            if(editingTask != null){
+                val index = taskList.indexOf(editingTask)
+                if(index != -1){
+                    taskList[index] = Task(title, description)
+                }
+                editingTask = null
+            } else {
+                taskList.add(Task(title, description))
+            }
         }
     }
 
@@ -73,7 +85,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Color.White
                 ) {
-                    MainScreen(taskList){
+                    MainScreen(taskList, taskLauncher){
                         val intent = Intent(this, TaskActivity::class.java)
                         taskLauncher.launch(intent)
                     }
@@ -84,7 +96,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(taskList: List<Task>, onAddTask: () -> Unit) {
+fun MainScreen(
+    taskList: List<Task>,
+    taskLauncher: ActivityResultLauncher<Intent>,
+    onAddTask: () -> Unit
+){
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Bottom
@@ -95,23 +113,33 @@ fun MainScreen(taskList: List<Task>, onAddTask: () -> Unit) {
                 .padding(bottom = 80.dp)
         ) {
             items(taskList) { task ->
-                TaskRow(task)
+                TaskRow(
+                    task = task,
+                    onEdit = { editedTask ->
+                        (context as? MainActivity)?.editingTask = editedTask
+                        val intent = Intent(context, EditTaskActivity::class.java).apply {
+                            putExtra("task_title", editedTask.title)
+                            putExtra("task_description", editedTask.description)
+                        }
+                        taskLauncher.launch(intent)
+                    },
+                    onDelete = { deletedTask ->
+                        val index = taskList.indexOf(deletedTask)
+                        if(index != -1){
+                            (taskList as MutableList).removeAt(index)
+                        }
+                    }
+                )
             }
         }
-
-        var isExpanded by remember { mutableStateOf(false) }
-
-        val surfaceColor by animateColorAsState(
-            if (isExpanded) ColorDarkBlue else Color.White,
-            label = ""
-        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ){
             Button(
-                onClick = onAddTask, modifier = Modifier.padding(16.dp)
+                onClick = onAddTask,
+                modifier = Modifier.padding(16.dp)
             ) {
                 Text("+")
             }
@@ -121,11 +149,48 @@ fun MainScreen(taskList: List<Task>, onAddTask: () -> Unit) {
 
 
 @Composable
-fun TaskRow(task: Task) {
-    Column(modifier = Modifier.padding(8.dp)) {
-        Text(text = "Title: ${task.title}", color = Color.Black)
-        if(task.description.isNotBlank()){
-            Text(text = "Description: ${task.description}", color = Color.Black)
+fun TaskRow(task: Task, onEdit: (Task) -> Unit, onDelete: (Task) -> Unit) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .background(Color.LightGray)
+            .padding(16.dp)
+            .clickable { isExpanded = !isExpanded }
+    ){
+
+        Column {
+            Text(
+                text = task.title,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            if(isExpanded && task.description.isNotBlank()) {
+                Text(
+                    text = task.description,
+                    color = Color.Black,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ){
+                Button(
+                    onClick = { onEdit(task) },
+                    modifier = Modifier.padding(end = 4.dp)
+                ) {
+                    Text("Edit")
+                }
+                Button(
+                    onClick = { onDelete(task) }
+                ) {
+                    Text("Delete")
+                }
+            }
         }
     }
 }

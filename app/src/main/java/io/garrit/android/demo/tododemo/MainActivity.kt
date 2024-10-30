@@ -44,28 +44,39 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import java.util.UUID
 
 data class Task(
-    val id: String = UUID.randomUUID().toString(),
     val title: String,
-    var isChecked: MutableState<Boolean> = mutableStateOf(false),
+    val description: String = ""
 )
 
 
 class MainActivity : ComponentActivity() {
+    private val taskList = mutableStateListOf<Task>()
+    private val taskLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val title = result.data?.getStringExtra("task_title") ?: ""
+            val description = result.data?.getStringExtra("task_description") ?: ""
+            taskList.add(Task(title, description))
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val list = remember { mutableStateListOf<Task>() }
-
             TodoDemoTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = ColorDarkBlue
+                    color = Color.White
                 ) {
-                    MainScreen(list = list)
+                    MainScreen(taskList){
+                        val intent = Intent(this, TaskActivity::class.java)
+                        taskLauncher.launch(intent)
+                    }
                 }
             }
         }
@@ -73,124 +84,48 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(list: MutableList<Task>, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-
+fun MainScreen(taskList: List<Task>, onAddTask: () -> Unit) {
     Column(
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Bottom
     ) {
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
                 .padding(bottom = 80.dp)
         ) {
-            items(list) { task ->
-                RowView(task)
+            items(taskList) { task ->
+                TaskRow(task)
             }
         }
 
-        TextInputView(list = list)
+        var isExpanded by remember { mutableStateOf(false) }
 
-        Button(
-            onClick = {
-                val intent = Intent(context, TaskActivity::class.java)
-                context.startActivity(intent)
-            },
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("Go to New Activity")
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TextInputView(list: MutableList<Task> ) {
-    var text by rememberSaveable { mutableStateOf("") }
-
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ){
-        val (button, textField) = createRefs()
-
-        OutlinedTextField(
-            value = text,
-            onValueChange = { text = it },
-            modifier = Modifier.constrainAs(textField) {
-                bottom.linkTo(parent.bottom, margin = 16.dp)
-                end.linkTo(parent.end, margin = 16.dp)
-                end.linkTo(button.start, margin = 8.dp)
-            },
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedBorderColor = Color.Blue,
-                unfocusedBorderColor = Color.Gray
-            )
+        val surfaceColor by animateColorAsState(
+            if (isExpanded) ColorDarkBlue else Color.White,
+            label = ""
         )
 
-        Button(
-            onClick = {
-                if (text.isNotBlank()){
-                    list.add(Task(title = text))
-                    text = ""
-                }
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Green,
-                contentColor = Color.White
-            ),
-            modifier = Modifier.constrainAs(button) {
-                bottom.linkTo(textField.bottom)
-                start.linkTo(textField.end, margin = 8.dp)
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
         ){
-            Text("+")
+            Button(
+                onClick = onAddTask, modifier = Modifier.padding(16.dp)
+            ) {
+                Text("+")
+            }
         }
-
     }
 }
 
 
 @Composable
-fun RowView(task: Task) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = task.isChecked.value,
-            onCheckedChange = { task.isChecked.value = !task.isChecked.value },
-            colors = CheckboxDefaults.colors(
-                checkedColor = Color.Green,
-                uncheckedColor = Color.Green
-            )
-        )
-        Text(
-            task.title,
-            color = Color.White
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainActivityPreview() {
-    val list = remember { mutableStateListOf(
-        Task (title = "Sample task 1"),
-        Task(title = "Sample task 2"))
-    }
-
-    TodoDemoTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = ColorDarkBlue
-        ) {
-            MainScreen(list = list)
+fun TaskRow(task: Task) {
+    Column(modifier = Modifier.padding(8.dp)) {
+        Text(text = "Title: ${task.title}", color = Color.Black)
+        if(task.description.isNotBlank()){
+            Text(text = "Description: ${task.description}", color = Color.Black)
         }
     }
 }

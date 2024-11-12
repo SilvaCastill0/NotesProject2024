@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import io.garrit.android.demo.tododemo.ui.theme.TodoDemoTheme
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.Alignment
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 
 class TaskActivity : ComponentActivity() {
@@ -51,6 +53,7 @@ class TaskActivity : ComponentActivity() {
 fun TaskInputScreen(onSubmit: (String, String) -> Unit) {
     val titleState = remember { mutableStateOf("") }
     val descriptionState = remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -76,7 +79,15 @@ fun TaskInputScreen(onSubmit: (String, String) -> Unit) {
         Spacer(modifier = Modifier.weight(0.1f))
 
         Button(
-            onClick = { onSubmit(titleState.value, descriptionState.value) },
+            onClick = {
+                if (titleState.value.isEmpty() || descriptionState.value.isEmpty()) {
+                    Toast.makeText(context, "Please do not leave fields empty", Toast.LENGTH_SHORT).show()
+                } else if (titleState.value.length < 3 || descriptionState.value.length < 5) {
+                    Toast.makeText(context, "Title must be at least 3 characters and Description must be at least 10 characters", Toast.LENGTH_SHORT).show()
+                } else{
+                    onSubmit(titleState.value, descriptionState.value)
+                }
+            },
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(top = 16.dp)

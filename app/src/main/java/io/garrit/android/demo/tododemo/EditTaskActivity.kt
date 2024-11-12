@@ -2,6 +2,7 @@ package io.garrit.android.demo.tododemo
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 
 class EditTaskActivity : ComponentActivity() {
     private lateinit var task: Task
@@ -31,8 +33,9 @@ class EditTaskActivity : ComponentActivity() {
 
     @Composable
     fun EditTaskScreen(task: Task) {
-        var newTitle by remember { mutableStateOf(task.title) }
-        var newDescription by remember { mutableStateOf(task.description) }
+        var newTitle = remember { mutableStateOf(task.title) }
+        var newDescription = remember { mutableStateOf(task.description) }
+        val context = LocalContext.current
 
         Column(
             modifier = Modifier
@@ -40,14 +43,14 @@ class EditTaskActivity : ComponentActivity() {
                 .fillMaxSize()
         ) {
             OutlinedTextField(
-                value = newTitle,
-                onValueChange = { newTitle = it },
+                value = newTitle.value,
+                onValueChange = { newTitle.value = it },
                 label = { Text("Title") },
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
-                value = newDescription,
-                onValueChange = { newDescription = it },
+                value = newDescription.value,
+                onValueChange = { newDescription.value = it },
                 label = { Text("Description") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -59,17 +62,23 @@ class EditTaskActivity : ComponentActivity() {
 
             Button(
                 onClick = {
-                    val intent = Intent().apply {
-                        putExtra("task_title", newTitle)
-                        putExtra("task_description", newDescription)
+                    if (newTitle.value.isEmpty() || newDescription.value.isEmpty()) {
+                        Toast.makeText(context, "Please do not leave fields empty", Toast.LENGTH_SHORT).show()
+                    } else if(newTitle.value.length < 3 || newDescription.value.length < 5) {
+                        Toast.makeText(context, "Description must be at least 10 characters and Title must be at least 3 characters", Toast.LENGTH_SHORT).show()
+                    } else {
+                        val intent = Intent().apply {
+                            putExtra("task_title", newTitle.value)
+                            putExtra("task_description", newDescription.value)
+                        }
+                        setResult(RESULT_OK, intent)
+                        finish()
                     }
-                    setResult(RESULT_OK, intent)
-                    finish()
-                    },
+                },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .padding(top = 16.dp)
-            ){
+            ) {
                 Text("Save")
             }
         }
